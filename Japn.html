@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Guía completa para técnicos de automatización: Robot de soldadura Japan Unix Serie DF. Especificaciones, programación, mantenimiento y mejores prácticas.">
+    <title>Guía Japan Unix Serie DF — Robot de Soldadura | Sanmina</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ===== CSS VARIABLES & RESET ===== */
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111827;
+            --bg-card: #1a2236;
+            --bg-card-hover: #1f2a42;
+            --bg-glass: rgba(26, 34, 54, 0.7);
+            --text-primary: #e8eaf0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-teal: #06d6a0;
+            --accent-teal-dim: rgba(6, 214, 160, 0.15);
+            --accent-blue: #3b82f6;
+            --accent-blue-dim: rgba(59, 130, 246, 0.15);
+            --accent-amber: #f59e0b;
+            --accent-amber-dim: rgba(245, 158, 11, 0.15);
+            --accent-rose: #f43f5e;
+            --accent-rose-dim: rgba(244, 63, 94, 0.15);
+            --accent-violet: #8b5cf6;
+            --accent-violet-dim: rgba(139, 92, 246, 0.15);
+            --border: rgba(148, 163, 184, 0.1);
+            --border-hover: rgba(148, 163, 184, 0.2);
+            --gradient-hero: linear-gradient(135deg, #0a0e1a 0%, #111827 40%, #0f172a 100%);
+            --gradient-teal: linear-gradient(135deg, #06d6a0, #0ea5e9);
+            --gradient-blue: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --gradient-amber: linear-gradient(135deg, #f59e0b, #ef4444);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+            --shadow-glow-teal: 0 0 30px rgba(6, 214, 160, 0.2);
+            --shadow-glow-blue: 0 0 30px rgba(59, 130, 246, 0.2);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(6, 214, 160, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 214, 160, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 0;
+            animation: orbFloat 20s ease-in-out infinite;
+        }
+        .bg-orb--teal {
+            width: 400px; height: 400px;
+            background: var(--accent-teal);
+            top: 10%; left: -5%;
+            opacity: 0.08;
+        }
+        .bg-orb--blue {
+            width: 500px; height: 500px;
+            background: var(--accent-blue);
+            top: 50%; right: -10%;
+            opacity: 0.06;
+            animation-delay: -7s;
+        }
+        .bg-orb--violet {
+            width: 350px; height: 350px;
+            background: var(--accent-violet);
+            bottom: 10%; left: 30%;
+            opacity: 0.05;
+            animation-delay: -14s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -40px) scale(1.05); }
+            66% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        /* ===== NAVIGATION ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 14, 26, 0.85);
+            backdrop-filter: blur(20px) saturate(1.5);
+            -webkit-backdrop-filter: blur(20px) saturate(1.5);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        .navbar.scrolled {
+            box-shadow: var(--shadow-md);
+        }
+        .navbar__inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 68px;
+        }
+        .navbar__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+        .navbar__logo {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-teal);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--bg-primary);
+        }
+        .navbar__title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+        .navbar__title span {
+            color: var(--accent-teal);
+        }
+        .navbar__links {
+            display: flex;
+            gap: 4px;
+            list-style: none;
+        }
+        .navbar__links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            padding: 8px 14px;
+            border-radius: var(--radius-sm);
+            transition: all 0.25s ease;
+        }
+        .navbar__links a:hover {
+            color: var(--accent-teal);
+            background: var(--accent-teal-dim);
+        }
+        .navbar__mobile-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 24px 60px;
+            background: var(--gradient-hero);
+        }
+        .hero__container {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        .hero__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--accent-teal-dim);
+            border: 1px solid rgba(6, 214, 160, 0.25);
+            color: var(--accent-teal);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 16px;
+            border-radius: 100px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .hero__badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent-teal);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        .hero__title {
+            font-size: clamp(36px, 5vw, 56px);
+            font-weight: 900;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+        }
+        .hero__title .gradient-text {
+            background: var(--gradient-teal);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero__subtitle {
+            font-size: 17px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 32px;
+            max-width: 520px;
+        }
+        .hero__stats {
+            display: flex;
+            gap: 32px;
+        }
+        .hero__stat {
+            text-align: center;
+        }
+        .hero__stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient-teal);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero__stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 4px;
+        }
+        .hero__image {
+            position: relative;
+        }
+        .hero__image img {
+            width: 100%;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg), var(--shadow-glow-teal);
+            border: 1px solid var(--border);
+        }
+        .hero__image::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: var(--radius-lg);
+            background: var(--gradient-teal);
+            z-index: -1;
+            opacity: 0.15;
+            filter: blur(30px);
+        }
+
+        /* ===== SECTION COMMON ===== */
+        .section {
+            position: relative;
+            z-index: 1;
+            padding: 100px 24px;
+        }
+        .section__container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        .section__header {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 60px;
+        }
+        .section__tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 16px;
+            padding: 6px 16px;
+            border-radius: 100px;
+        }
+        .section__tag--teal {
+            color: var(--accent-teal);
+            background: var(--accent-teal-dim);
+            border: 1px solid rgba(6, 214, 160, 0.2);
+        }
+        .section__tag--blue {
+            color: var(--accent-blue);
+            background: var(--accent-blue-dim);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+        .section__tag--amber {
+            color: var(--accent-amber);
+            background: var(--accent-amber-dim);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+        .section__tag--rose {
+            color: var(--accent-rose);
+            background: var(--accent-rose-dim);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+        }
+        .section__tag--violet {
+            color: var(--accent-violet);
+            background: var(--accent-violet-dim);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        .section__title {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        .section__desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            transition: all 0.35s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+        .card:hover::before {
+            opacity: 1;
+        }
+        .card--teal::before { background: var(--gradient-teal); }
+        .card--blue::before { background: var(--gradient-blue); }
+        .card--amber::before { background: var(--gradient-amber); }
+        .card--rose::before { background: linear-gradient(135deg, var(--accent-rose), var(--accent-amber)); }
+        .card--violet::before { background: linear-gradient(135deg, var(--accent-violet), var(--accent-blue)); }
+
+        .card__icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .card__icon--teal { background: var(--accent-teal-dim); }
+        .card__icon--blue { background: var(--accent-blue-dim); }
+        .card__icon--amber { background: var(--accent-amber-dim); }
+        .card__icon--rose { background: var(--accent-rose-dim); }
+        .card__icon--violet { background: var(--accent-violet-dim); }
+
+        .card__title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.01em;
+        }
+        .card__text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+        .card__text ul {
+            list-style: none;
+            margin-top: 12px;
+        }
+        .card__text ul li {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 8px;
+        }
+        .card__text ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--accent-teal);
+            font-weight: 700;
+        }
+
+        /* ===== MODELS TABLE ===== */
+        .specs-table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        .specs-table thead {
+            background: linear-gradient(135deg, rgba(6, 214, 160, 0.08), rgba(59, 130, 246, 0.08));
+        }
+        .specs-table th {
+            padding: 16px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent-teal);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .specs-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        .specs-table tbody tr {
+            transition: background 0.2s ease;
+        }
+        .specs-table tbody tr:hover {
+            background: rgba(6, 214, 160, 0.04);
+        }
+        .specs-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        .specs-table .model-name {
+            font-weight: 700;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .specs-table .highlight-val {
+            color: var(--accent-teal);
+            font-weight: 600;
+        }
+
+        /* ===== GRID LAYOUTS ===== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        /* ===== TIMELINE / STEPS ===== */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+        }
+        .steps::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent-teal), var(--accent-blue), var(--accent-violet));
+            opacity: 0.3;
+        }
+        .step {
+            display: flex;
+            gap: 24px;
+            padding: 24px 0;
+            position: relative;
+        }
+        .step__number {
+            width: 60px;
+            height: 60px;
+            min-width: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 800;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-teal);
+            color: var(--accent-teal);
+            z-index: 2;
+            box-shadow: 0 0 20px rgba(6, 214, 160, 0.15);
+        }
+        .step__content {
+            flex: 1;
+            padding-top: 12px;
+        }
+        .step__title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .step__text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ===== WARNING / TIP BOXES ===== */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin: 20px 0;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+        .callout--warning {
+            background: var(--accent-amber-dim);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+        .callout--danger {
+            background: var(--accent-rose-dim);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+        }
+        .callout--tip {
+            background: var(--accent-teal-dim);
+            border: 1px solid rgba(6, 214, 160, 0.25);
+        }
+        .callout--info {
+            background: var(--accent-blue-dim);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+        }
+        .callout__icon {
+            font-size: 22px;
+            min-width: 28px;
+            text-align: center;
+        }
+        .callout__content {
+            flex: 1;
+        }
+        .callout__title {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .callout--warning .callout__title { color: var(--accent-amber); }
+        .callout--danger .callout__title { color: var(--accent-rose); }
+        .callout--tip .callout__title { color: var(--accent-teal); }
+        .callout--info .callout__title { color: var(--accent-blue); }
+        .callout__text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ===== MAINTENANCE IMAGE SECTION ===== */
+        .maintenance-visual {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .maintenance-visual img {
+            max-width: 700px;
+            width: 100%;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+        }
+        .maintenance-visual__caption {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 12px;
+            font-style: italic;
+        }
+
+        /* ===== COMPONENTS DIAGRAM SECTION ===== */
+        .diagram-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            margin-top: 40px;
+        }
+        .diagram-section img {
+            width: 100%;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ===== CODE / PARAMETER BLOCKS ===== */
+        .param-block {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px 24px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text-secondary);
+        }
+        .param-block .key {
+            color: var(--accent-teal);
+            font-weight: 600;
+        }
+        .param-block .val {
+            color: var(--accent-amber);
+        }
+        .param-block .comment {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ===== QUICK-REF / CHEAT SHEET ===== */
+        .cheat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .cheat-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        .cheat-item:hover {
+            border-color: var(--accent-teal);
+            box-shadow: 0 0 20px rgba(6, 214, 160, 0.08);
+        }
+        .cheat-item__label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent-teal);
+            margin-bottom: 6px;
+        }
+        .cheat-item__value {
+            font-size: 14px;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        .cheat-item__hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ===== ACCORDION / FAQ ===== */
+        .accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .accordion__item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .accordion__item:hover {
+            border-color: var(--border-hover);
+        }
+        .accordion__trigger {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 20px 24px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+        }
+        .accordion__trigger::after {
+            content: '+';
+            font-size: 20px;
+            color: var(--accent-teal);
+            transition: transform 0.3s ease;
+            font-weight: 300;
+        }
+        .accordion__item.open .accordion__trigger::after {
+            transform: rotate(45deg);
+        }
+        .accordion__body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .accordion__item.open .accordion__body {
+            max-height: 600px;
+        }
+        .accordion__content {
+            padding: 0 24px 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            position: relative;
+            z-index: 1;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            padding: 60px 24px;
+            text-align: center;
+        }
+        .footer__brand {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .footer__brand span {
+            background: var(--gradient-teal);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .footer__text {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+        .footer__links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 20px;
+        }
+        .footer__links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s ease;
+        }
+        .footer__links a:hover {
+            color: var(--accent-teal);
+        }
+
+        /* ===== SCROLL ANIMATIONS ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== BACK TO TOP ===== */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 999;
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-teal);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--bg-primary);
+            box-shadow: var(--shadow-md), var(--shadow-glow-teal);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .back-to-top.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+        .back-to-top:hover {
+            transform: translateY(-3px);
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar {
+            position: fixed;
+            top: 68px;
+            left: 0;
+            height: 3px;
+            background: var(--gradient-teal);
+            z-index: 999;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px rgba(6, 214, 160, 0.5);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .hero__container { grid-template-columns: 1fr; text-align: center; }
+            .hero__subtitle { margin: 0 auto 32px; }
+            .hero__stats { justify-content: center; }
+            .hero__image { order: -1; max-width: 500px; margin: 0 auto; }
+            .grid-3 { grid-template-columns: repeat(2, 1fr); }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); }
+            .diagram-section { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .navbar__links { display: none; }
+            .navbar__mobile-btn { display: block; }
+            .navbar__links.open {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 68px;
+                left: 0;
+                right: 0;
+                background: rgba(10, 14, 26, 0.95);
+                backdrop-filter: blur(20px);
+                padding: 16px 24px;
+                border-bottom: 1px solid var(--border);
+            }
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .cheat-grid { grid-template-columns: 1fr; }
+            .hero__stats { flex-direction: column; gap: 16px; }
+            .section { padding: 60px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-orb bg-orb--teal"></div>
+    <div class="bg-orb bg-orb--blue"></div>
+    <div class="bg-orb bg-orb--violet"></div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar__inner">
+            <a href="#" class="navbar__brand">
+                <div class="navbar__logo">DF</div>
+                <div class="navbar__title">Japan Unix <span>Serie DF</span></div>
+            </a>
+            <ul class="navbar__links" id="navLinks">
+                <li><a href="#modelos">Modelos</a></li>
+                <li><a href="#componentes">Componentes</a></li>
+                <li><a href="#programacion">Programación</a></li>
+                <li><a href="#mantenimiento">Mantenimiento</a></li>
+                <li><a href="#seguridad">Seguridad</a></li>
+                <li><a href="#troubleshooting">Solución</a></li>
+                <li><a href="#quickref">Quick Ref</a></li>
+            </ul>
+            <button class="navbar__mobile-btn" id="menuBtn" aria-label="Menú">☰</button>
+        </div>
+    </nav>
+
+    <!-- ========== HERO ========== -->
+    <section class="hero" id="hero">
+        <div class="hero__container">
+            <div class="hero__content">
+                <div class="hero__badge">🤖 Guía Técnica — Automatización</div>
+                <h1 class="hero__title">
+                    Robot de Soldadura<br>
+                    <span class="gradient-text">Japan Unix Serie DF</span>
+                </h1>
+                <p class="hero__subtitle">
+                    Todo lo que necesitas saber como técnico de automatización en <strong>Sanmina</strong>. 
+                    Desde la configuración inicial hasta el mantenimiento preventivo, domina el robot 
+                    de soldadura más preciso de la industria electrónica.
+                </p>
+                <div class="hero__stats">
+                    <div class="hero__stat">
+                        <div class="hero__stat-value">4 Ejes</div>
+                        <div class="hero__stat-label">X, Y, Z, R</div>
+                    </div>
+                    <div class="hero__stat">
+                        <div class="hero__stat-value">900 mm/s</div>
+                        <div class="hero__stat-label">Velocidad Máx</div>
+                    </div>
+                    <div class="hero__stat">
+                        <div class="hero__stat-value">999</div>
+                        <div class="hero__stat-label">Programas</div>
+                    </div>
+                    <div class="hero__stat">
+                        <div class="hero__stat-value">IoT</div>
+                        <div class="hero__stat-label">Industria 4.0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero__image">
+                <img src="C:/Users/dtru8/.gemini/antigravity/brain/0ed2c2c1-9220-47ff-b35e-adb2cb3a47ba/soldering_robot_hero_1791259209957.png" alt="Robot de soldadura Japan Unix Serie DF">
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== MODELOS / SPECS ========== -->
+    <section class="section" id="modelos">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--teal">📊 Especificaciones</div>
+                <h2 class="section__title">Modelos de la Serie DF</h2>
+                <p class="section__desc">
+                    La serie DF ofrece tres configuraciones principales adaptadas a diferentes tamaños de PCB 
+                    y requerimientos de producción. Todos los modelos soportan Industry 4.0 e IoT.
+                </p>
+            </div>
+
+            <div class="specs-table-wrapper reveal">
+                <table class="specs-table">
+                    <thead>
+                        <tr>
+                            <th>Modelo</th>
+                            <th>Área de Trabajo (X × Y)</th>
+                            <th>Vel. X,Y</th>
+                            <th>Vel. Z</th>
+                            <th>Controlador</th>
+                            <th>Ideal Para</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="model-name">UNIX-DF204S</td>
+                            <td class="highlight-val">200 × 210 mm</td>
+                            <td>600 mm/s</td>
+                            <td>250 mm/s</td>
+                            <td>Separado</td>
+                            <td>PCBs pequeños, prototipos</td>
+                        </tr>
+                        <tr>
+                            <td class="model-name">UNIX-DF304S</td>
+                            <td class="highlight-val">300 × 275 mm</td>
+                            <td>900 mm/s</td>
+                            <td>400 mm/s</td>
+                            <td>Integrado</td>
+                            <td>Producción media, estándar</td>
+                        </tr>
+                        <tr>
+                            <td class="model-name">UNIX-DF404S</td>
+                            <td class="highlight-val">400 × 365 mm</td>
+                            <td>900 mm/s</td>
+                            <td>400 mm/s</td>
+                            <td>Integrado</td>
+                            <td>PCBs grandes, alto volumen</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="callout callout--info" style="margin-top: 24px;">
+                <div class="callout__icon">💡</div>
+                <div class="callout__content">
+                    <div class="callout__title">Ejes Adicionales</div>
+                    <div class="callout__text">
+                        Los modelos DF soportan hasta <strong>2 ejes adicionales</strong> (5° y 6° eje) 
+                        para tareas complejas como rotación de componentes o inclinación angular. 
+                        Consulta con tu supervisor si tu línea requiere esta configuración.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Features Grid -->
+            <div class="grid-4 reveal" style="margin-top: 40px;">
+                <div class="card card--teal">
+                    <div class="card__icon card__icon--teal">🔌</div>
+                    <div class="card__title">Conectividad</div>
+                    <div class="card__text">
+                        LAN (Ethernet) y puertos COM para control externo, envío de datos y monitoreo remoto en tiempo real.
+                    </div>
+                </div>
+                <div class="card card--blue">
+                    <div class="card__icon card__icon--blue">🔥</div>
+                    <div class="card__title">Calentador</div>
+                    <div class="card__text">
+                        Nuevo calentador de alto rendimiento con respuesta térmica rápida y control preciso de temperatura.
+                    </div>
+                </div>
+                <div class="card card--amber">
+                    <div class="card__icon card__icon--amber">🎯</div>
+                    <div class="card__title">Lock-On</div>
+                    <div class="card__text">
+                        Mecanismo Lock-On para posicionamiento exacto de la soldadura. Garantiza repetibilidad perfecta.
+                    </div>
+                </div>
+                <div class="card card--violet">
+                    <div class="card__icon card__icon--violet">💾</div>
+                    <div class="card__title">USB & Red</div>
+                    <div class="card__text">
+                        Puerto USB para backup/carga de programas. Integración con red de fábrica para trazabilidad.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== COMPONENTES PRINCIPALES ========== -->
+    <section class="section" id="componentes" style="background: var(--bg-secondary);">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--blue">🔩 Hardware</div>
+                <h2 class="section__title">Componentes Principales</h2>
+                <p class="section__desc">
+                    Conoce cada parte del robot. Un buen técnico identifica cada componente 
+                    y entiende su función dentro del sistema.
+                </p>
+            </div>
+
+            <div class="diagram-section reveal">
+                <img src="C:/Users/dtru8/.gemini/antigravity/brain/0ed2c2c1-9220-47ff-b35e-adb2cb3a47ba/robot_components_diagram_1791259218646.png" alt="Diagrama de componentes del robot Japan Unix DF">
+                <div>
+                    <div class="card card--blue" style="margin-bottom: 16px;">
+                        <div class="card__title">🎮 Teaching Pendant (Controlador)</div>
+                        <div class="card__text">
+                            Interfaz principal de programación. Permite mover manualmente los ejes X, Y, Z, R 
+                            para enseñar las posiciones de soldadura. Tiene pantalla LCD y botones para 
+                            configurar parámetros como temperatura, tiempo y cantidad de soldadura.
+                        </div>
+                    </div>
+                    <div class="card card--teal" style="margin-bottom: 16px;">
+                        <div class="card__title">🔧 Cabezal de Soldadura (Iron Head)</div>
+                        <div class="card__text">
+                            Contiene la punta de soldadura intercambiable y el calentador. 
+                            La punta debe mantenerse limpia y sin oxidación. Diferentes geometrías 
+                            de punta para diferentes tipos de juntas.
+                        </div>
+                    </div>
+                    <div class="card card--amber" style="margin-bottom: 16px;">
+                        <div class="card__title">📏 Alimentador de Soldadura (Feeder)</div>
+                        <div class="card__text">
+                            Mecanismo que alimenta el alambre de soldadura hasta la punta. 
+                            Usa el mecanismo Lock-On o ajustadores de ángulo para alineación precisa. 
+                            La posición del alambre es CRÍTICA para la calidad.
+                        </div>
+                    </div>
+                    <div class="card card--rose">
+                        <div class="card__title">🏗️ Sistema de Ejes (Gantry XYZ-R)</div>
+                        <div class="card__text">
+                            Pórtico que mueve el cabezal en 4 ejes. Servomotores de alta precisión 
+                            con velocidades de hasta 900 mm/s. El eje R permite rotación para 
+                            acceder a ángulos difíciles.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout callout--tip reveal" style="margin-top: 30px;">
+                <div class="callout__icon">🎯</div>
+                <div class="callout__content">
+                    <div class="callout__title">Consejo para Nuevos Técnicos</div>
+                    <div class="callout__text">
+                        Antes de tocar cualquier cosa, observa al robot en operación durante al menos un ciclo completo. 
+                        Identifica visualmente cada componente, escucha los sonidos normales de operación, y 
+                        familiarízate con la secuencia de movimientos. Esto te dará contexto invaluable.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== PROGRAMACIÓN ========== -->
+    <section class="section" id="programacion">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--violet">💻 Programación</div>
+                <h2 class="section__title">Cómo Programar el Robot</h2>
+                <p class="section__desc">
+                    La programación se realiza mediante "Teaching" — enseñar al robot punto por punto 
+                    las posiciones de soldadura y los parámetros de cada una.
+                </p>
+            </div>
+
+            <!-- Steps Timeline -->
+            <div class="steps reveal">
+                <div class="step">
+                    <div class="step__number">1</div>
+                    <div class="step__content">
+                        <div class="step__title">Entrar en Modo Teaching</div>
+                        <div class="step__text">
+                            En el Teaching Pendant, navega al menú <strong>"Program"</strong> o <strong>"Teaching"</strong>. 
+                            Selecciona un número de programa vacío (hay hasta 999 disponibles). 
+                            El modo Teaching te permite mover los ejes manualmente usando los botones 
+                            direccionales o el joystick del pendant.
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step__number">2</div>
+                    <div class="step__content">
+                        <div class="step__title">Posicionar y Guardar Puntos</div>
+                        <div class="step__text">
+                            Mueve el cabezal hasta el primer punto de soldadura sobre el PCB. Usa los ejes X, Y para 
+                            posicionar horizontalmente, Z para la altura, y R para el ángulo de rotación. 
+                            Una vez en posición exacta, presiona <strong>"Save Point"</strong> o <strong>"Teach"</strong> 
+                            para guardar las coordenadas.
+                        </div>
+                        <div class="callout callout--warning" style="margin-top: 12px;">
+                            <div class="callout__icon">⚠️</div>
+                            <div class="callout__content">
+                                <div class="callout__title">Altura Z Crítica</div>
+                                <div class="callout__text">
+                                    La altura Z determina la presión de la punta sobre el pad. Muy alto = mala transferencia 
+                                    de calor. Muy bajo = daño al PCB o componente. Ajusta hasta sentir contacto suave.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step__number">3</div>
+                    <div class="step__content">
+                        <div class="step__title">Configurar Parámetros por Punto</div>
+                        <div class="step__text">
+                            Para cada punto guardado, configura los parámetros de soldadura:
+                        </div>
+                        <div class="param-block">
+                            <span class="key">Temperatura:</span> <span class="val">350-400°C</span> <span class="comment">// Típica para Sn-Pb. Sin plomo puede requerir más</span><br>
+                            <span class="key">Pre-Heat Time:</span> <span class="val">0.3-1.0 s</span> <span class="comment">// Tiempo de precalentamiento del pad</span><br>
+                            <span class="key">Solder Feed:</span> <span class="val">3-8 mm</span> <span class="comment">// Cantidad de alambre de soldadura</span><br>
+                            <span class="key">Feed Speed:</span> <span class="val">5-15 mm/s</span> <span class="comment">// Velocidad de alimentación del alambre</span><br>
+                            <span class="key">Dwell Time:</span> <span class="val">0.5-2.0 s</span> <span class="comment">// Tiempo total de contacto</span><br>
+                            <span class="key">Cleaning Every:</span> <span class="val">5-10 pts</span> <span class="comment">// Limpieza automática cada N puntos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step__number">4</div>
+                    <div class="step__content">
+                        <div class="step__title">Repetir para Todos los Puntos</div>
+                        <div class="step__text">
+                            Repite el proceso de posicionar → guardar → configurar para cada punto de soldadura 
+                            en el PCB. Usa la función <strong>"Point Graphic Editing"</strong> para visualizar 
+                            la ruta de soldadura y verificar que no hay colisiones o movimientos innecesarios.
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step__number">5</div>
+                    <div class="step__content">
+                        <div class="step__title">Test Run (Corrida de Prueba)</div>
+                        <div class="step__text">
+                            <strong>SIEMPRE</strong> ejecuta una corrida de prueba antes de producción. 
+                            Usa la opción de "Dry Run" o velocidad reducida. Verifica visualmente que:
+                        </div>
+                        <div class="card__text">
+                            <ul>
+                                <li>El cabezal no golpee ningún componente</li>
+                                <li>La punta toque correctamente cada pad</li>
+                                <li>El alambre de soldadura se alimente en la posición correcta</li>
+                                <li>La secuencia de puntos sea lógica (minimiza movimiento)</li>
+                                <li>Los tiempos y temperaturas sean adecuados</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step__number">6</div>
+                    <div class="step__content">
+                        <div class="step__title">Guardar y Documentar</div>
+                        <div class="step__text">
+                            Guarda el programa final. Haz un <strong>backup en USB</strong> del programa. 
+                            Documenta los parámetros críticos en la hoja de proceso de la línea. 
+                            Usa el <strong>Switch Box</strong> para asignar el programa a un canal de acceso rápido 
+                            si los operadores necesitan cambiar entre productos.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offline Programming -->
+            <div class="callout callout--info reveal" style="margin-top: 30px;">
+                <div class="callout__icon">🖥️</div>
+                <div class="callout__content">
+                    <div class="callout__title">Programación Offline (PC Software)</div>
+                    <div class="callout__text">
+                        Para PCBs complejos con muchos puntos, puedes usar el software de PC para importar 
+                        archivos <strong>DXF, Gerber o imágenes</strong> del circuito. Esto permite crear 
+                        programas en pantalla y luego transferirlos al robot, ahorrando tiempo de máquina parada.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== MANTENIMIENTO ========== -->
+    <section class="section" id="mantenimiento" style="background: var(--bg-secondary);">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--amber">🛠️ Mantenimiento</div>
+                <h2 class="section__title">Las 3 Claves del Mantenimiento</h2>
+                <p class="section__desc">
+                    Japan Unix enfatiza tres pilares fundamentales para evitar fallas en la soldadura. 
+                    Domina estos tres puntos y resolverás el 80% de los problemas.
+                </p>
+            </div>
+
+            <div class="maintenance-visual reveal">
+                <img src="C:/Users/dtru8/.gemini/antigravity/brain/0ed2c2c1-9220-47ff-b35e-adb2cb3a47ba/maintenance_tips_icons_1791259247588.png" alt="Los tres pilares del mantenimiento: Punta, Posición del alambre, Temperatura">
+                <div class="maintenance-visual__caption">Los tres pilares del mantenimiento preventivo — Condición de la punta, posición del alambre y temperatura</div>
+            </div>
+
+            <div class="grid-3 reveal">
+                <div class="card card--amber">
+                    <div class="card__icon card__icon--amber">🔧</div>
+                    <div class="card__title">1. Condición de la Punta</div>
+                    <div class="card__text">
+                        La punta es el componente más crítico. Una punta oxidada o desgastada 
+                        causa transferencia de calor inconsistente y juntas frías.
+                        <ul>
+                            <li>Inspecciona la punta al inicio de cada turno</li>
+                            <li>Limpia con la estación de limpieza (aire o cepillo)</li>
+                            <li>Reemplaza cuando veas desgaste, picaduras u oxidación</li>
+                            <li>Estañea la punta al final del turno para protegerla</li>
+                            <li>Usa SOLO puntas originales Japan Unix</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card card--teal">
+                    <div class="card__icon card__icon--teal">🎯</div>
+                    <div class="card__title">2. Posición del Alambre</div>
+                    <div class="card__text">
+                        Si el alambre de soldadura no llega exactamente al punto correcto, 
+                        la junta será defectuosa. Es la causa #1 de rechazos.
+                        <ul>
+                            <li>Verifica la alineación del feeder cada inicio de turno</li>
+                            <li>Usa el mecanismo Lock-On para fijación segura</li>
+                            <li>Ajusta el ángulo con los angle setters</li>
+                            <li>Verifica que el alambre no esté torcido o atorado</li>
+                            <li>Revisa el diámetro correcto del alambre según especificación</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card card--rose">
+                    <div class="card__icon card__icon--rose">🌡️</div>
+                    <div class="card__title">3. Temperatura de la Punta</div>
+                    <div class="card__text">
+                        La temperatura incorrecta causa desde juntas frías hasta 
+                        daño por calor a componentes sensibles.
+                        <ul>
+                            <li>Verifica con termómetro externo periódicamente</li>
+                            <li>La lectura del pendant puede desviarse con el tiempo</li>
+                            <li>Sn-Pb: típicamente 330-380°C</li>
+                            <li>Lead-Free (SAC): típicamente 370-420°C</li>
+                            <li>Calibra según el procedimiento de tu planta</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maintenance Schedule -->
+            <div class="card reveal" style="margin-top: 40px; border-left: 3px solid var(--accent-amber);">
+                <div class="card__title">📅 Calendario de Mantenimiento Sugerido</div>
+                <div class="card__text">
+                    <div class="param-block">
+                        <span class="key">CADA TURNO (8h):</span><br>
+                        &nbsp;&nbsp;→ Inspeccionar punta de soldadura<br>
+                        &nbsp;&nbsp;→ Verificar alineación del alambre<br>
+                        &nbsp;&nbsp;→ Limpiar área de trabajo y residuos de flux<br>
+                        &nbsp;&nbsp;→ Verificar primer pieza soldada vs. estándar<br><br>
+                        <span class="key">SEMANAL:</span><br>
+                        &nbsp;&nbsp;→ Verificar temperatura con termómetro externo<br>
+                        &nbsp;&nbsp;→ Limpiar guías y rieles de los ejes<br>
+                        &nbsp;&nbsp;→ Revisar cables y conexiones<br>
+                        &nbsp;&nbsp;→ Backup de programas en USB<br><br>
+                        <span class="key">MENSUAL:</span><br>
+                        &nbsp;&nbsp;→ Lubricación de ejes según manual<br>
+                        &nbsp;&nbsp;→ Calibración completa de temperatura<br>
+                        &nbsp;&nbsp;→ Revisión del sistema de limpieza de punta<br>
+                        &nbsp;&nbsp;→ Inspección del alimentador de soldadura<br><br>
+                        <span class="key">SEMESTRAL / ANUAL:</span><br>
+                        &nbsp;&nbsp;→ Calibración de posición de ejes (homing)<br>
+                        &nbsp;&nbsp;→ Revisión eléctrica completa<br>
+                        &nbsp;&nbsp;→ Actualización de firmware si disponible<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== SEGURIDAD ========== -->
+    <section class="section" id="seguridad">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--rose">🛡️ Seguridad</div>
+                <h2 class="section__title">Seguridad en la Operación</h2>
+                <p class="section__desc">
+                    El robot trabaja con temperaturas superiores a 350°C y movimientos rápidos. 
+                    La seguridad no es opcional — es tu primera responsabilidad.
+                </p>
+            </div>
+
+            <div class="grid-2 reveal">
+                <div>
+                    <div class="callout callout--danger">
+                        <div class="callout__icon">🚫</div>
+                        <div class="callout__content">
+                            <div class="callout__title">NUNCA Hagas Esto</div>
+                            <div class="callout__text">
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="padding: 4px 0;">❌ Nunca metas las manos en el área de trabajo con el robot en automático</li>
+                                    <li style="padding: 4px 0;">❌ Nunca desactives los sensores de seguridad o guardas</li>
+                                    <li style="padding: 4px 0;">❌ Nunca toques la punta caliente — puede causar quemaduras graves</li>
+                                    <li style="padding: 4px 0;">❌ Nunca operes sin extracción de humos de soldadura</li>
+                                    <li style="padding: 4px 0;">❌ Nunca modifiques un programa en modo automático</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="callout callout--tip">
+                        <div class="callout__icon">✅</div>
+                        <div class="callout__content">
+                            <div class="callout__title">SIEMPRE Haz Esto</div>
+                            <div class="callout__text">
+                                <ul style="list-style: none; padding: 0;">
+                                    <li style="padding: 4px 0;">✅ Usa lentes de seguridad al estar cerca del robot</li>
+                                    <li style="padding: 4px 0;">✅ Verifica que el E-STOP (paro de emergencia) funcione</li>
+                                    <li style="padding: 4px 0;">✅ Asegúrate de que la tierra física esté conectada</li>
+                                    <li style="padding: 4px 0;">✅ Pon el robot en MANUAL antes de ajustar cualquier cosa</li>
+                                    <li style="padding: 4px 0;">✅ Reporta cualquier sonido, olor o comportamiento anormal</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-3 reveal" style="margin-top: 24px;">
+                <div class="card card--rose">
+                    <div class="card__icon card__icon--rose">🔴</div>
+                    <div class="card__title">Paro de Emergencia</div>
+                    <div class="card__text">
+                        Localiza el botón E-STOP antes de comenzar a trabajar. Presiónalo ante 
+                        cualquier situación peligrosa. Para reanudar, gira el botón para desbloquearlo 
+                        y presiona el botón de RESET.
+                    </div>
+                </div>
+                <div class="card card--amber">
+                    <div class="card__icon card__icon--amber">⚡</div>
+                    <div class="card__title">Eléctrica</div>
+                    <div class="card__text">
+                        El robot requiere conexión a tierra apropiada. Nunca trabajes con cables 
+                        dañados. Desconecta la alimentación principal antes de realizar mantenimiento 
+                        eléctrico. Sigue el procedimiento LOTO de Sanmina.
+                    </div>
+                </div>
+                <div class="card card--blue">
+                    <div class="card__icon card__icon--blue">💨</div>
+                    <div class="card__title">Humos de Soldadura</div>
+                    <div class="card__text">
+                        El flux genera humos tóxicos al calentarse. El sistema de extracción 
+                        debe estar siempre funcionando. Si notas que la extracción es débil, 
+                        reporta inmediatamente y no continues soldando.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== TROUBLESHOOTING ========== -->
+    <section class="section" id="troubleshooting" style="background: var(--bg-secondary);">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--amber">🔍 Solución de Problemas</div>
+                <h2 class="section__title">Troubleshooting Rápido</h2>
+                <p class="section__desc">
+                    Los problemas más comunes y cómo resolverlos. 
+                    Si el problema persiste, escala con tu supervisor o contacta soporte Japan Unix.
+                </p>
+            </div>
+
+            <div class="accordion reveal" id="accordion">
+                <div class="accordion__item">
+                    <button class="accordion__trigger">🔥 La soldadura no se derrite o se derrite parcialmente</button>
+                    <div class="accordion__body">
+                        <div class="accordion__content">
+                            <strong>Causas probables:</strong><br>
+                            • Temperatura demasiado baja — Verifica el setpoint y calibra con termómetro externo<br>
+                            • Punta oxidada o desgastada — La oxidación actúa como aislante térmico. Reemplaza la punta<br>
+                            • Tiempo de contacto (Dwell) insuficiente — Incrementa en 0.2s y prueba<br>
+                            • Pre-heat time muy corto — El pad necesita precalentarse antes de aplicar soldadura<br><br>
+                            <strong>Acción inmediata:</strong> Revisa la punta primero (causa más común), luego verifica temperatura real.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion__item">
+                    <button class="accordion__trigger">🎯 La soldadura cae fuera del pad o en posición incorrecta</button>
+                    <div class="accordion__body">
+                        <div class="accordion__content">
+                            <strong>Causas probables:</strong><br>
+                            • Desalineación del feeder de soldadura — Reajusta la posición del alambre con Lock-On<br>
+                            • Posición del punto (XY) se desplazó — Re-enseña los puntos afectados<br>
+                            • El PCB no está bien fijado en el jig — Verifica sujeción y planitud<br>
+                            • El alambre está torcido o enredado — Revisa el carrete y la guía<br><br>
+                            <strong>Acción inmediata:</strong> Verifica alineación del feeder y que el PCB esté bien colocado.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion__item">
+                    <button class="accordion__trigger">❄️ Juntas frías o con apariencia opaca/granulosa</button>
+                    <div class="accordion__body">
+                        <div class="accordion__content">
+                            <strong>Causas probables:</strong><br>
+                            • Temperatura insuficiente o calentamiento irregular<br>
+                            • Movimiento del PCB durante la solidificación — Verifica jig y vibraciones<br>
+                            • Contaminación del pad (óxido, flux viejo, grasa) — Limpieza del PCB<br>
+                            • Aleación de soldadura incorrecta para la temperatura configurada<br><br>
+                            <strong>Nota:</strong> La soldadura lead-free (SAC305) naturalmente se ve más opaca que Sn-Pb. 
+                            No la confundas con una junta fría real. Consulta tus estándares IPC.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion__item">
+                    <button class="accordion__trigger">⚙️ El robot no se mueve o da error al arrancar</button>
+                    <div class="accordion__body">
+                        <div class="accordion__content">
+                            <strong>Causas probables:</strong><br>
+                            • E-STOP activado — Desbloquea girando el botón y presiona RESET<br>
+                            • Sensor de seguridad (guarda/puerta abierta) — Cierra todas las guardas<br>
+                            • Error de servo — Puede requerir hacer "Home" (referencia de ejes)<br>
+                            • Error de comunicación — Revisa cable entre pendant y controlador<br><br>
+                            <strong>Acción inmediata:</strong> Lee el código de error en la pantalla. Apunta el código 
+                            y búscalo en el manual. Si es error de servo, intenta un Home primero.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion__item">
+                    <button class="accordion__trigger">🔌 Exceso de soldadura o "puentes" entre pads</button>
+                    <div class="accordion__body">
+                        <div class="accordion__content">
+                            <strong>Causas probables:</strong><br>
+                            • Demasiada cantidad de alambre (Solder Feed) — Reduce la cantidad en 1-2mm<br>
+                            • Velocidad de alimentación muy rápida — Reduce Feed Speed<br>
+                            • Temperatura excesiva que hace que la soldadura fluya demasiado<br>
+                            • Punta demasiado grande para el espacio entre pads<br><br>
+                            <strong>Acción inmediata:</strong> Reduce la cantidad de solder feed primero. 
+                            Si persiste, verifica que estás usando la geometría de punta correcta.
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion__item">
+                    <button class="accordion__trigger">💨 Salpicaduras de soldadura o "spatter"</button>
+                    <div class="accordion__body">
+                        <div class="accordion__content">
+                            <strong>Causas probables:</strong><br>
+                            • Humedad en el alambre de soldadura o en el PCB — Almacena correctamente<br>
+                            • Temperatura excesivamente alta que vaporiza el flux<br>
+                            • Flux tipo RA (muy agresivo) con temperatura alta<br>
+                            • Alambre de soldadura de mala calidad<br><br>
+                            <strong>Acción inmediata:</strong> Verifica condiciones de almacenamiento del alambre. 
+                            Si el carrete estuvo expuesto a humedad, reemplázalo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== MONITOREO / SOFTWARE ========== -->
+    <section class="section" id="monitoreo">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--blue">📊 Software de Monitoreo</div>
+                <h2 class="section__title">Soldering Manager & IoT</h2>
+                <p class="section__desc">
+                    El software Soldering Manager te permite monitorear el robot en tiempo real 
+                    y conectarlo a la red de fábrica para trazabilidad Industry 4.0.
+                </p>
+            </div>
+
+            <div class="grid-2 reveal">
+                <div class="card card--blue">
+                    <div class="card__icon card__icon--blue">📈</div>
+                    <div class="card__title">Monitoreo en Tiempo Real</div>
+                    <div class="card__text">
+                        <ul>
+                            <li>Perfil térmico en vivo durante cada soldadura</li>
+                            <li>Estado de operación: automático, manual, error</li>
+                            <li>Contador de ciclos y piezas producidas</li>
+                            <li>Historial de errores y alarmas</li>
+                            <li>Tiempo de ciclo por programa</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card card--violet">
+                    <div class="card__icon card__icon--violet">🌐</div>
+                    <div class="card__title">Conectividad de Fábrica</div>
+                    <div class="card__text">
+                        <ul>
+                            <li>Conexión LAN para integración con MES/SCADA</li>
+                            <li>Exportación de datos para análisis SPC</li>
+                            <li>Acceso remoto para diagnóstico y soporte</li>
+                            <li>Backup automático de programas en servidor</li>
+                            <li>Alertas por correo ante fallas críticas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== QUICK REFERENCE ========== -->
+    <section class="section" id="quickref" style="background: var(--bg-secondary);">
+        <div class="section__container">
+            <div class="section__header reveal">
+                <div class="section__tag section__tag--teal">⚡ Referencia Rápida</div>
+                <h2 class="section__title">Cheat Sheet del Técnico</h2>
+                <p class="section__desc">
+                    Valores de referencia rápida para tu día a día. 
+                    Siempre verifica contra la documentación de proceso de tu línea específica.
+                </p>
+            </div>
+
+            <div class="cheat-grid reveal">
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Temperatura Sn-Pb (63/37)</div>
+                    <div class="cheat-item__value">330 – 380 °C</div>
+                    <div class="cheat-item__hint">Punto de fusión del alambre: 183°C</div>
+                </div>
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Temperatura Lead-Free (SAC305)</div>
+                    <div class="cheat-item__value">370 – 420 °C</div>
+                    <div class="cheat-item__hint">Punto de fusión: 217-220°C</div>
+                </div>
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Pre-Heat Típico</div>
+                    <div class="cheat-item__value">0.3 – 1.5 segundos</div>
+                    <div class="cheat-item__hint">Depende del tamaño del pad y plano de tierra</div>
+                </div>
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Solder Feed Típico</div>
+                    <div class="cheat-item__value">3 – 10 mm</div>
+                    <div class="cheat-item__hint">Ajustar según tamaño de junta deseada</div>
+                </div>
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Limpieza de Punta</div>
+                    <div class="cheat-item__value">Cada 5 – 10 puntos</div>
+                    <div class="cheat-item__hint">Más frecuente con flux agresivo</div>
+                </div>
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Vida Útil de Punta</div>
+                    <div class="cheat-item__value">~30,000 – 50,000 puntos</div>
+                    <div class="cheat-item__hint">Varía según material y mantenimiento</div>
+                </div>
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Capacidad de Programas</div>
+                    <div class="cheat-item__value">Hasta 999 programas</div>
+                    <div class="cheat-item__hint">Con backup USB recomendado</div>
+                </div>
+                <div class="cheat-item">
+                    <div class="cheat-item__label">Velocidad Máx. XY</div>
+                    <div class="cheat-item__value">600 – 900 mm/s</div>
+                    <div class="cheat-item__hint">DF204S: 600 | DF304S/404S: 900</div>
+                </div>
+            </div>
+
+            <div class="callout callout--tip reveal" style="margin-top: 30px;">
+                <div class="callout__icon">📋</div>
+                <div class="callout__content">
+                    <div class="callout__title">Tu Primer Día — Checklist</div>
+                    <div class="callout__text">
+                        <ol style="padding-left: 20px; line-height: 2;">
+                            <li>Identifica tu modelo específico de robot (DF204S, DF304S, o DF404S)</li>
+                            <li>Localiza el manual de operación físico junto a la máquina</li>
+                            <li>Ubica el botón de paro de emergencia (E-STOP)</li>
+                            <li>Pide a un compañero experimentado que te muestre un ciclo completo</li>
+                            <li>Practica el modo Teaching en un PCB de prueba (no producción)</li>
+                            <li>Aprende a cambiar la punta de soldadura</li>
+                            <li>Revisa los estándares IPC de soldadura de tu línea</li>
+                            <li>Familiarízate con el sistema de extracción de humos</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <div class="footer__brand">Japan Unix <span>Serie DF</span></div>
+        <p class="footer__text">
+            Guía técnica de referencia para el equipo de automatización — Sanmina<br>
+            Esta guía es un complemento, NO un sustituto del manual oficial del fabricante.
+        </p>
+        <div class="footer__links">
+            <a href="https://www.japanunix.com/en/" target="_blank" rel="noopener">Japan Unix Official</a>
+            <a href="#hero">Volver al Inicio</a>
+        </div>
+        <p class="footer__text" style="margin-top: 20px; opacity: 0.5;">
+            Creado en Octubre 2026 — Para uso interno del equipo de automatización
+        </p>
+    </footer>
+
+    <!-- Back to Top -->
+    <button class="back-to-top" id="backToTop" aria-label="Volver arriba">↑</button>
+
+    <script>
+        // ===== Scroll Progress Bar =====
+        const progressBar = document.getElementById('progressBar');
+        const navbar = document.getElementById('navbar');
+        const backToTop = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const scrollPercent = (scrollTop / docHeight) * 100;
+            progressBar.style.width = scrollPercent + '%';
+
+            // Navbar shadow
+            navbar.classList.toggle('scrolled', scrollTop > 50);
+
+            // Back to top button
+            backToTop.classList.toggle('show', scrollTop > 600);
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // ===== Mobile Menu =====
+        const menuBtn = document.getElementById('menuBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        menuBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('open');
+            menuBtn.textContent = navLinks.classList.contains('open') ? '✕' : '☰';
+        });
+
+        // Close menu on link click
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('open');
+                menuBtn.textContent = '☰';
+            });
+        });
+
+        // ===== Scroll Reveal Animation =====
+        const revealElements = document.querySelectorAll('.reveal');
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+
+        // ===== Accordion =====
+        document.querySelectorAll('.accordion__trigger').forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const item = trigger.parentElement;
+                const wasOpen = item.classList.contains('open');
+                
+                // Close all items
+                document.querySelectorAll('.accordion__item').forEach(i => {
+                    i.classList.remove('open');
+                });
+                
+                // Toggle clicked item
+                if (!wasOpen) {
+                    item.classList.add('open');
+                }
+            });
+        });
+
+        // ===== Active nav link highlight =====
+        const sections = document.querySelectorAll('section[id]');
+        const navLinksAll = document.querySelectorAll('.navbar__links a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinksAll.forEach(link => {
+                link.style.color = '';
+                link.style.background = '';
+                if (link.getAttribute('href') === '#' + current) {
+                    link.style.color = 'var(--accent-teal)';
+                    link.style.background = 'var(--accent-teal-dim)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
